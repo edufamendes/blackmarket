@@ -4,16 +4,95 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Loja Fácil</title>
+  <script>
+  let carrinho = [];
+
+function adicionarAoCarrinho(nome, preco) {
+  const itemExistente = carrinho.find(item => item.nome === nome);
+  if (itemExistente) {
+    itemExistente.quantidade++;
+  } else {
+    carrinho.push({ nome, preco, quantidade: 1 });
+  }
+  atualizarCarrinho();
+}
+
+function aumentarQuantidade(index) {
+  carrinho[index].quantidade++;
+  atualizarCarrinho();
+}
+
+function diminuirQuantidade(index) {
+  if (carrinho[index].quantidade > 1) {
+    carrinho[index].quantidade--;
+  } else {
+    carrinho.splice(index, 1);
+  }
+  atualizarCarrinho();
+}
+
+function atualizarCarrinho() {
+  const lista = document.getElementById('lista-carrinho');
+  const totalSpan = document.getElementById('total');
+  lista.innerHTML = '';
+  let total = 0;
+
+  carrinho.forEach((item, index) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      ${item.nome} x${item.quantidade} - R$ ${(item.preco * item.quantidade).toFixed(2)}
+      <button onclick="aumentarQuantidade(${index})">+</button>
+      <button onclick="diminuirQuantidade(${index})">−</button>
+    `;
+    lista.appendChild(li);
+    total += item.preco * item.quantidade;
+  });
+
+  totalSpan.textContent = total.toFixed(2);
+  document.getElementById('carrinho').style.display = carrinho.length > 0 ? 'block' : 'none';
+}
+
+function finalizarCompra() {
+  if (carrinho.length === 0) {
+    alert("Seu carrinho está vazio.");
+    return;
+  }
+
+  let mensagem = "*Resumo da compra:*\n\n";
+  let total = 0;
+
+  carrinho.forEach(item => {
+    const subtotal = item.preco * item.quantidade;
+    mensagem += `🛒 *${item.nome}* x${item.quantidade} = R$ ${subtotal.toFixed(2)}\n`;
+    total += subtotal;
+  });
+
+    mensagem += `\n💰 *Total:* R$ ${total.toFixed(2)}`;
+
+    // Redirecionar para Mercado Pago
+    const linkMercadoPago = `https://link.mercadopago.com.br/blackmarketgf`;
+    window.open(linkMercadoPago, "_blank");
+
+    // Limpar carrinho
+    carrinho = [];
+    atualizarCarrinho();
+  }
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f8f8f8;
+      background-image: url('avast.png');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
       margin: 0;
       padding: 0;
+      color: white;
     }
 
     header {
-      background-color: #222;
+      background-color: rgba(34, 34, 34, 0.8);
       color: white;
       padding: 1rem;
       text-align: center;
@@ -28,6 +107,9 @@
       flex-wrap: wrap;
       justify-content: center;
       padding: 2rem;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      margin: 1rem;
     }
 
     .produto {
@@ -75,11 +157,25 @@
     }
 
     footer {
-      background: #222;
+      background: rgba(34, 34, 34, 0.8);
       color: white;
       text-align: center;
       padding: 1rem;
       margin-top: 2rem;
+    }
+
+    #carrinho {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      border: 2px solid #222;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 300px;
+      display: none;
+      z-index: 999;
+      color: black;
     }
   </style>
 </head>
@@ -99,14 +195,17 @@
       <p>R$ 49,00 ou 140k</p>
       <a class="botao" href="qrcode-pix.png" target="_blank">PIX</a>
       <a class="botao" href="https://pay.infinitepay.io/eduumendes/VC1DLTEtSQ-y9tsQgU0P-49,00" target="_blank">Credito</a>
+      <button class="botao" onclick="adicionarAoCarrinho('Montaria', 49.00)">Adicionar ao Carrinho</button>
     </div>
 
     <!-- PRODUTO 2 -->
     <div class="produto">
       <img src="armas 80.png" alt="Produto 2">
-      <h2>Armas Lend level 80</h2>
-      <p>R$6,30 ou 18k</p>
-      <a class="botao" href="https://wa.me/16991360954" target="_blank">Comprar</a>
+      <h2>Armas Lend/roxa lvl75/80</h2>
+      <p>R$5,60 ou 16k</p>
+      <a class="botao" href="qrcode-pix.png" target="_blank">PIX</a>
+      <a class="botao" href="https://pay.infinitepay.io/eduumendes/VC1DLTEtSQ-y9tsQgU0P-49,00" target="_blank">Credito</a>
+      <button class="botao" onclick="adicionarAoCarrinho('Armas 80', 5.60)">Adicionar ao Carrinho</button>
     </div>
 
     <!-- PRODUTO 3 -->
@@ -114,15 +213,19 @@
       <img src="arma red 100.png" alt="Produto 3">
       <h2>Armas red 90</h2>
       <p>R$21,00 ou 60k</p>
-      <a class="botao" href="https://wa.me/16991360954" target="_blank">Comprar</a>
+      <a class="botao" href="qrcode-pix.png" target="_blank">PIX</a>
+      <a class="botao" href="https://pay.infinitepay.io/eduumendes/VC1DLTEtSQ-y9tsQgU0P-49,00" target="_blank">Credito</a>
+      <button class="botao" onclick="adicionarAoCarrinho('Armas red 100', 21.00)">Adicionar ao Carrinho</button>
     </div>
 
     <!--PRODUTO 4 -->
       <div class="produto">
       <img src="armas roxas.png" alt="Produto 3">
-      <h2>Armas roxas 90</h2>
+      <h2>Armas Roxas 90</h2>
       <p>R$21,00 ou 60k</p>
-      <a class="botao" href="https://wa.me/16991360954" target="_blank">Comprar</a>
+      <a class="botao" href="qrcode-pix.png" target="_blank">PIX</a>
+      <a class="botao" href="https://pay.infinitepay.io/eduumendes/VC1DLTEtSQ-y9tsQgU0P-49,00" target="_blank">Credito</a>
+      <button class="botao" onclick="adicionarAoCarrinho('roxas 90', 12.00)">Adicionar ao Carrinho</button>
     </div>
 
   </section>
@@ -133,11 +236,18 @@
       <img src="trono.JPG" alt="Produto 4">
       <h2>Trono excep 5 star</h2>
       <p>R$ 49,00 ou 140k</p>
-      <a class="botao" href="https://wa.me/16991360954" target="_blank">Comprar</a>
+      <a class="botao" href="qrcode-pix.png" target="_blank">PIX</a>
+      <a class="botao" href="https://pay.infinitepay.io/eduumendes/VC1DLTEtSQ-y9tsQgU0P-49,00" target="_blank">Credito</a>
+      <button class="botao" onclick="adicionarAoCarrinho('Trono excep 5 Star', 49.00)">Adicionar ao Carrinho</button>
     </div>
 
     </section>
-
+    <div id="carrinho">
+  <h3>Carrinho</h3>
+  <ul id="lista-carrinho"></ul>
+  <p><strong>Total:</strong> R$ <span id="total">0.00</span></p>
+  <button class="botao" onclick="finalizarCompra()">Finalizar Compra</button>
+</div>
   <footer>
     <p>&copy; 2025 Minha Loja. Todos os direitos reservados.</p>
   </footer>
