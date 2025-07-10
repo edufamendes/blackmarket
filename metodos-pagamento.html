@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Métodos de Pagamento - Loja Fácil</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('avast.png');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+
+    header {
+      background-color: rgba(34, 34, 34, 0.8);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .metodos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .metodo-card {
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 10px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.2s;
+    }
+
+    .metodo-card:hover {
+      transform: translateY(-5px);
+      border-color: #5017d4;
+    }
+
+    .metodo-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .metodo-icon {
+      width: 40px;
+      height: 40px;
+      background: #5017d4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      font-size: 20px;
+    }
+
+    .metodo-nome {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .metodo-tipo {
+      color: #ccc;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .metodo-detalhes {
+      margin-top: 1rem;
+    }
+
+    .metodo-detalhes p {
+      margin: 0.5rem 0;
+      font-size: 14px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      font-size: 18px;
+    }
+
+    .error {
+      background: rgba(244, 67, 54, 0.2);
+      border: 1px solid #f44336;
+      padding: 1rem;
+      border-radius: 10px;
+      margin: 2rem 0;
+    }
+
+    .btn {
+      background-color: #5017d4;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin: 10px 5px;
+    }
+
+    .btn:hover {
+      background-color: #3a0f9e;
+    }
+
+    .stats {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Métodos de Pagamento Disponíveis</h1>
+    <p>Veja todas as formas de pagamento aceitas em nossa loja</p>
+  </header>
+
+  <div class="container">
+    <div class="stats">
+      <h3>📊 Estatísticas</h3>
+      <p>Total de métodos disponíveis: <span id="total-metodos">0</span></p>
+      <a href="/" class="btn">Voltar à Loja</a>
+      <button class="btn" onclick="carregarMetodos()">Atualizar Lista</button>
+    </div>
+
+    <div id="loading" class="loading">
+      Carregando métodos de pagamento...
+    </div>
+
+    <div id="error" class="error" style="display: none;">
+      Erro ao carregar métodos de pagamento. Tente novamente.
+    </div>
+
+    <div id="metodos-container" class="metodos-grid" style="display: none;">
+      <!-- Métodos serão carregados aqui -->
+    </div>
+  </div>
+
+  <script>
+    // Carregar métodos de pagamento ao carregar a página
+    document.addEventListener('DOMContentLoaded', carregarMetodos);
+
+    async function carregarMetodos() {
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const container = document.getElementById('metodos-container');
+      const totalSpan = document.getElementById('total-metodos');
+
+      try {
+        loading.style.display = 'block';
+        error.style.display = 'none';
+        container.style.display = 'none';
+
+        const response = await fetch('/api/metodos-pagamento');
+        const data = await response.json();
+
+        if (data.success) {
+          exibirMetodos(data.metodos);
+          totalSpan.textContent = data.total;
+        } else {
+          throw new Error(data.error || 'Erro desconhecido');
+        }
+
+      } catch (error) {
+        console.error('Erro:', error);
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = `Erro: ${error.message}`;
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    function exibirMetodos(metodos) {
+      const container = document.getElementById('metodos-container');
+      container.innerHTML = '';
+
+      metodos.forEach(metodo => {
+        const card = document.createElement('div');
+        card.className = 'metodo-card';
+
+        const icon = getPaymentIcon(metodo.id);
+        
+        card.innerHTML = `
+          <div class="metodo-header">
+            <div class="metodo-icon">${icon}</div>
+            <div>
+              <h3 class="metodo-nome">${metodo.name}</h3>
+              <p class="metodo-tipo">${metodo.payment_type_id}</p>
+            </div>
+          </div>
+          <div class="metodo-detalhes">
+            <p><strong>ID:</strong> ${metodo.id}</p>
+            <p><strong>Tipo:</strong> ${metodo.payment_type_id}</p>
+            <p><strong>Status:</strong> ${metodo.status}</p>
+            ${metodo.secure_thumbnail ? `<p><strong>Thumbnail:</strong> ${metodo.secure_thumbnail}</p>` : ''}
+            ${metodo.thumbnail ? `<p><strong>Thumbnail:</strong> ${metodo.thumbnail}</p>` : ''}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      container.style.display = 'grid';
+    }
+
+    function getPaymentIcon(paymentId) {
+      const icons = {
+        'credit_card': '💳',
+        'debit_card': '💳',
+        'bank_transfer': '🏦',
+        'ticket': '🎫',
+        'atm': '🏧',
+        'digital_wallet': '📱',
+        'digital_currency': '₿',
+        'prepaid_card': '💳',
+        'account_money': '💰'
+      };
+
+      // Mapear IDs específicos do Mercado Pago
+      const specificIcons = {
+        'visa': '💳',
+        'master': '💳',
+        'elo': '💳',
+        'amex': '💳',
+        'hipercard': '💳',
+        'pix': '📱',
+        'bolbradesco': '🏦',
+        'pec': '🏦',
+        'rapipago': '🏧',
+        'pagofacil': '🏧',
+        'redlink': '🏧',
+        'cargavirtual': '💳',
+        'cordial': '💳',
+        'diners': '💳',
+        'naranja': '💳',
+        'nativa': '💳',
+        'shopping': '💳',
+        'argencard': '💳',
+        'cencosud': '💳',
+        'cabal': '💳',
+        'cmr': '💳',
+        'cordial': '💳',
+        'diners': '💳',
+        'naranja': '💳',
+        'nativa': '💳',
+        'shopping': '💳',
+        'argencard': '💳',
+        'cencosud': '💳',
+        'cabal': '💳',
+        'cmr': '💳'
+      };
+
+      return specificIcons[paymentId] || icons[paymentId] || '💳';
+    }
+  </script>
+</body>
+</html> 

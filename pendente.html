@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento Pendente - Loja Fácil</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('avast.png');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 2rem;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 500px;
+      margin: 1rem;
+    }
+
+    .pending-icon {
+      font-size: 4rem;
+      color: #ff9800;
+      margin-bottom: 1rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    h1 {
+      color: #ff9800;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .btn {
+      background-color: #5017d4;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin: 10px;
+      font-size: 16px;
+    }
+
+    .btn:hover {
+      background-color: #3a0f9e;
+    }
+
+    .info-section {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1rem;
+      border-radius: 10px;
+      margin: 1rem 0;
+    }
+
+    .status-check {
+      background: rgba(255, 152, 0, 0.2);
+      padding: 1rem;
+      border-radius: 10px;
+      margin: 1rem 0;
+      border: 1px solid #ff9800;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="pending-icon">⏳</div>
+    <h1>Pagamento em Análise</h1>
+    <p>Seu pagamento está sendo processado.</p>
+    
+    <div class="info-section">
+      <h3>O que acontece agora?</h3>
+      <p>• Seu pagamento está sendo analisado</p>
+      <p>• Você receberá uma confirmação em breve</p>
+      <p>• O processamento pode levar alguns minutos</p>
+    </div>
+
+    <div class="status-check">
+      <h3>Verificar Status</h3>
+      <p>Você pode verificar o status do seu pagamento a qualquer momento.</p>
+      <button class="btn" onclick="verificarStatus()">Verificar Agora</button>
+    </div>
+
+    <p>Entre em contato se tiver dúvidas!</p>
+    
+    <a href="/" class="btn">Voltar à Loja</a>
+    <a href="https://wa.me/SEU_NUMERO_WHATSAPP" class="btn" target="_blank">
+      Falar no WhatsApp
+    </a>
+  </div>
+
+  <script>
+    // Capturar parâmetros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentId = urlParams.get('payment_id');
+    const preferenceId = urlParams.get('preference_id');
+
+    function verificarStatus() {
+      if (paymentId) {
+        fetch(`/api/pagamento/${paymentId}`)
+          .then(response => response.json())
+          .then(data => {
+            console.log('Status do pagamento:', data);
+            
+            if (data.status === 'approved') {
+              alert('Pagamento aprovado! Redirecionando...');
+              window.location.href = '/sucesso.html';
+            } else if (data.status === 'rejected') {
+              alert('Pagamento recusado. Redirecionando...');
+              window.location.href = '/falha.html';
+            } else {
+              alert('Pagamento ainda está em análise. Tente novamente em alguns minutos.');
+            }
+          })
+          .catch(error => {
+            console.error('Erro ao verificar status:', error);
+            alert('Erro ao verificar status. Tente novamente.');
+          });
+      } else {
+        alert('ID do pagamento não encontrado.');
+      }
+    }
+
+    // Verificar status automaticamente a cada 30 segundos
+    if (paymentId) {
+      setInterval(verificarStatus, 30000);
+    }
+  </script>
+</body>
+</html> 
