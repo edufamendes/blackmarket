@@ -1,159 +1,57 @@
-# 🛒 Loja Fácil - API Mercado Pago
+# 🛒 Loja Fácil - Versão Final
 
-Sistema completo de e-commerce com integração ao Mercado Pago.
+## 📁 Arquivos incluídos:
 
-## 🚀 Funcionalidades
+### 🎨 Páginas HTML:
+- `index.html` - Página principal da loja
+- `sucesso.html` - Página de pagamento aprovado
+- `falha.html` - Página de pagamento recusado  
+- `pendente.html` - Página de pagamento em análise
+- `metodos-pagamento.html` - Página de métodos de pagamento
 
-- ✅ Carrinho de compras dinâmico
-- ✅ Integração completa com Mercado Pago
-- ✅ Páginas de retorno personalizadas
-- ✅ Webhook para notificações
-- ✅ Verificação de status de pagamento
-- ✅ Interface responsiva e moderna
+### 🖼️ Imagens:
+- Todas as imagens dos produtos (.png, .jpg, .webp, .JPG)
+- Imagem de fundo (avast.png)
 
-## 📋 Pré-requisitos
+## 🚀 Como usar:
 
-- Node.js (versão 14 ou superior)
-- Conta no Mercado Pago
-- Credenciais de API do Mercado Pago
+1. **Faça upload de todos os arquivos** para sua hospedagem
+2. **Configure o número de WhatsApp** nos arquivos HTML:
+   - Substitua `5511999999999` pelo seu número real
+3. **Teste o pagamento** com cartões de teste do Mercado Pago
 
-## ⚙️ Configuração
+## 💳 Cartões de teste:
 
-### 1. Instalar Dependências
+**Aprovado:** 4509 9535 6623 3704  
+**Recusado:** 4000 0000 0000 0002  
+**Pendente:** 4000 0000 0000 0127
 
-```bash
-npm install
+## ⚙️ Configurações:
+
+### WhatsApp:
+Edite os arquivos HTML e substitua:
 ```
-
-### 2. Configurar Credenciais do Mercado Pago
-
-Edite o arquivo `config.env` e adicione suas credenciais:
-
-```env
-# Credenciais do Mercado Pago
-MERCADOPAGO_ACCESS_TOKEN=SEU_ACCESS_TOKEN_AQUI
-MERCADOPAGO_PUBLIC_KEY=SEU_PUBLIC_KEY_AQUI
-
-# Configurações do servidor
-PORT=3000
-NODE_ENV=development
+5511999999999
 ```
+Pelo seu número real (ex: 5511987654321)
 
-### 3. Obter Credenciais do Mercado Pago
+### Mercado Pago:
+O site já está configurado com suas credenciais do Mercado Pago.
 
-1. Acesse [Mercado Pago Developers](https://www.mercadopago.com.br/developers)
-2. Faça login na sua conta
-3. Vá em "Suas integrações"
-4. Copie o **Access Token** e **Public Key**
+## 📱 Funcionalidades:
 
-### 4. Configurar Webhook (Opcional)
+✅ Carrinho de compras  
+✅ Integração com Mercado Pago  
+✅ Páginas de retorno personalizadas  
+✅ Fallback para WhatsApp  
+✅ Design responsivo  
+✅ Produtos com imagens  
 
-Para receber notificações automáticas:
+## 🔧 Suporte:
 
-1. No painel do Mercado Pago, vá em "Configurações"
-2. Adicione a URL do webhook: `https://seudominio.com/api/webhook`
-
-## 🚀 Como Executar
-
-### Desenvolvimento
-```bash
-npm run dev
-```
-
-### Produção
-```bash
-npm start
-```
-
-O servidor estará disponível em: `http://localhost:3000`
-
-## 📱 Endpoints da API
-
-### Criar Pagamento
-```
-POST /api/criar-pagamento
-```
-
-**Body:**
-```json
-{
-  "items": [
-    {
-      "nome": "Produto",
-      "preco": 49.00,
-      "quantidade": 1
-    }
-  ],
-  "payer": {
-    "name": "Nome do Cliente",
-    "email": "cliente@email.com"
-  }
-}
-```
-
-### Verificar Status do Pagamento
-```
-GET /api/pagamento/:id
-```
-
-### Configurações
-```
-GET /api/config
-```
-
-### Teste da API
-```
-GET /api/teste
-```
-
-### Métodos de Pagamento
-```
-GET /api/metodos-pagamento
-```
-
-## 🎨 Personalização
-
-### Alterar WhatsApp
-Edite os arquivos `sucesso.html`, `falha.html` e `pendente.html` e substitua:
-```
-https://wa.me/SEU_NUMERO_WHATSAPP
-```
-
-### Alterar Cores
-Edite o CSS nos arquivos HTML para personalizar as cores da sua marca.
-
-## 🔧 Estrutura do Projeto
-
-```
-meu site/
-├── index.html              # Página principal da loja
-├── sucesso.html            # Página de pagamento aprovado
-├── falha.html              # Página de pagamento recusado
-├── pendente.html           # Página de pagamento pendente
-├── metodos-pagamento.html  # Página de métodos de pagamento
-├── server.js               # Servidor da API
-├── package.json            # Dependências do projeto
-├── config.env              # Configurações (credenciais)
-└── README.md               # Este arquivo
-```
-
-## 🛡️ Segurança
-
-- ✅ Credenciais armazenadas em variáveis de ambiente
-- ✅ Validação de dados de entrada
-- ✅ Tratamento de erros
-- ✅ CORS configurado
-
-## 📞 Suporte
-
-Para dúvidas ou problemas:
-- WhatsApp: [Seu número]
-- Email: [Seu email]
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT.
+Se precisar de ajuda, entre em contato via WhatsApp ou email.
 
 ---
-
-**Desenvolvido com ❤️ para sua loja online!** 
+**Versão:** Final  
+**Data:** 2025  
+**Status:** ✅ Pronto para produção 
