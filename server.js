@@ -1,182 +1,152 @@
 const express = require('express');
-const cors = require('cors');
-const mercadopago = require('mercadopago');
-require('dotenv').config({ path: './config.env' });
+const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcryptjs');
+const session = require('express-session');
+const bodyParser = require('body-parser');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.')); // Serve arquivos estáticos
+// Configuração do banco de dados
+const db = new sqlite3.Database('loja_facil.db');
 
-// Configurar Mercado Pago
-mercadopago.configure({
-  access_token: process.env.MERCADOPAGO_ACCESS_TOKEN
+// Criar tabela de usuários
+db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL,
+        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 });
 
-// Rota para criar pagamento
-app.post('/api/criar-pagamento', async (req, res) => {
-  try {
-    const { items, payer } = req.body;
+// Configurações do Express
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static('public'));
+app.use(session({
+    secret: 'loja-facil-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 horas
+}));
 
-    // Validar dados recebidos
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ 
-        error: 'Lista de itens é obrigatória' 
-      });
+// Middleware para verificar se usuário está logado
+function verificarLogin(req, res, next) {
+    if (req.session.usuario) {
+        next();
+    } else {
+        res.redirect('/login');
     }
+}
 
-    // Preparar itens para o Mercado Pago
-    const preference = {
-      items: items.map(item => ({
-        title: item.nome,
-        unit_price: parseFloat(item.preco),
-        quantity: parseInt(item.quantidade)
-      })),
-      payer: {
-        name: payer?.name || 'Cliente',
-        email: payer?.email || 'cliente@exemplo.com'
-      },
-      back_urls: {
-        success: `${req.protocol}://${req.get('host')}/sucesso.html`,
-        failure: `${req.protocol}://${req.get('host')}/falha.html`,
-        pending: `${req.protocol}://${req.get('host')}/pendente.html`
-      },
-      auto_return: 'approved',
-      notification_url: `${req.protocol}://${req.get('host')}/api/webhook`,
-      external_reference: `pedido_${Date.now()}`,
-      expires: true,
-      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
-    };
-
-    // Criar preferência no Mercado Pago
-    const response = await mercadopago.preferences.create(preference);
-
-    res.json({
-      success: true,
-      init_point: response.body.init_point,
-      sandbox_init_point: response.body.sandbox_init_point,
-      preference_id: response.body.id
-    });
-
-  } catch (error) {
-    console.error('Erro ao criar pagamento:', error);
-    res.status(500).json({ 
-      error: 'Erro interno do servidor',
-      details: error.message 
-    });
-  }
-});
-
-// Webhook para receber notificações do Mercado Pago
-app.post('/api/webhook', async (req, res) => {
-  try {
-    const { type, data } = req.body;
-
-    if (type === 'payment') {
-      const paymentId = data.id;
-      
-      // Buscar informações do pagamento
-      const payment = await mercadopago.payment.findById(paymentId);
-      
-      console.log('Pagamento recebido:', {
-        id: payment.body.id,
-        status: payment.body.status,
-        status_detail: payment.body.status_detail,
-        external_reference: payment.body.external_reference,
-        amount: payment.body.transaction_amount
-      });
-
-      // Aqui você pode adicionar lógica para:
-      // - Atualizar status do pedido no banco de dados
-      // - Enviar email de confirmação
-      // - Processar entrega dos itens
+// Rotas
+app.get('/', (req, res) => {
+    if (req.session.usuario) {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    } else {
+        res.sendFile(path.join(__dirname, 'welcome.html'));
     }
-
-    res.status(200).json({ received: true });
-  } catch (error) {
-    console.error('Erro no webhook:', error);
-    res.status(500).json({ error: 'Erro no webhook' });
-  }
 });
 
-// Rota para verificar status do pagamento
-app.get('/api/pagamento/:id', async (req, res) => {
-  try {
-    const paymentId = req.params.id;
-    const payment = await mercadopago.payment.findById(paymentId);
+app.get('/cadastro', (req, res) => {
+    res.sendFile(path.join(__dirname, 'cadastro.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/perfil', verificarLogin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'perfil.html'));
+});
+
+// API para cadastro
+app.post('/api/cadastro', async (req, res) => {
+    const { nome, email, senha } = req.body;
     
-    res.json({
-      id: payment.body.id,
-      status: payment.body.status,
-      status_detail: payment.body.status_detail,
-      amount: payment.body.transaction_amount,
-      external_reference: payment.body.external_reference
-    });
-  } catch (error) {
-    console.error('Erro ao buscar pagamento:', error);
-    res.status(500).json({ error: 'Erro ao buscar pagamento' });
-  }
-});
-
-// Rota para obter configurações públicas
-app.get('/api/config', (req, res) => {
-  res.json({
-    public_key: process.env.MERCADOPAGO_PUBLIC_KEY,
-    environment: process.env.NODE_ENV
-  });
-});
-
-// Rota para obter métodos de pagamento disponíveis
-app.get('/api/metodos-pagamento', async (req, res) => {
-  try {
-    const response = await fetch('https://api.mercadopago.com/v1/payment_methods', {
-      headers: {
-        'Authorization': `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro na API do Mercado Pago: ${response.status}`);
+    try {
+        // Verificar se email já existe
+        db.get('SELECT id FROM usuarios WHERE email = ?', [email], async (err, row) => {
+            if (err) {
+                return res.status(500).json({ erro: 'Erro no banco de dados' });
+            }
+            
+            if (row) {
+                return res.status(400).json({ erro: 'Email já cadastrado' });
+            }
+            
+            // Criptografar senha
+            const senhaCriptografada = await bcrypt.hash(senha, 10);
+            
+            // Inserir novo usuário
+            db.run('INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)', 
+                [nome, email, senhaCriptografada], function(err) {
+                if (err) {
+                    return res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
+                }
+                
+                res.json({ sucesso: true, mensagem: 'Usuário cadastrado com sucesso!' });
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ erro: 'Erro interno do servidor' });
     }
+});
 
-    const metodos = await response.json();
+// API para login
+app.post('/api/login', (req, res) => {
+    const { email, senha } = req.body;
     
-    // Filtrar apenas métodos relevantes para Brasil
-    const metodosBrasil = metodos.filter(metodo => 
-      metodo.countries && metodo.countries.some(country => country.id === 'BR')
-    );
-
-    res.json({
-      success: true,
-      metodos: metodosBrasil,
-      total: metodosBrasil.length
+    db.get('SELECT * FROM usuarios WHERE email = ?', [email], async (err, usuario) => {
+        if (err) {
+            return res.status(500).json({ erro: 'Erro no banco de dados' });
+        }
+        
+        if (!usuario) {
+            return res.status(400).json({ erro: 'Email ou senha incorretos' });
+        }
+        
+        // Verificar senha
+        const senhaValida = await bcrypt.compare(senha, usuario.senha);
+        
+        if (!senhaValida) {
+            return res.status(400).json({ erro: 'Email ou senha incorretos' });
+        }
+        
+        // Criar sessão
+        req.session.usuario = {
+            id: usuario.id,
+            nome: usuario.nome,
+            email: usuario.email
+        };
+        
+        res.json({ sucesso: true, mensagem: 'Login realizado com sucesso!' });
     });
-
-  } catch (error) {
-    console.error('Erro ao buscar métodos de pagamento:', error);
-    res.status(500).json({ 
-      error: 'Erro ao buscar métodos de pagamento',
-      details: error.message 
-    });
-  }
 });
 
-// Rota de teste
-app.get('/api/teste', (req, res) => {
-  res.json({ 
-    message: 'API funcionando!',
-    timestamp: new Date().toISOString()
-  });
+// API para logout
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ erro: 'Erro ao fazer logout' });
+        }
+        res.json({ sucesso: true, mensagem: 'Logout realizado com sucesso!' });
+    });
 });
 
-// Iniciar servidor
+// API para verificar se usuário está logado
+app.get('/api/usuario', (req, res) => {
+    if (req.session.usuario) {
+        res.json({ logado: true, usuario: req.session.usuario });
+    } else {
+        res.json({ logado: false });
+    }
+});
+
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📱 API disponível em: http://localhost:${PORT}/api`);
-  console.log(`🌐 Frontend disponível em: http://localhost:${PORT}`);
-});
-
-module.exports = app; 
+    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Acesse: http://localhost:${PORT}`);
+}); 

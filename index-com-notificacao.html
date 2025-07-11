@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Loja Fácil</title>
+  <script>
+  let carrinho = [];
+
+function adicionarAoCarrinho(nome, preco) {
+  const itemExistente = carrinho.find(item => item.nome === nome);
+  if (itemExistente) {
+    itemExistente.quantidade++;
+  } else {
+    carrinho.push({ nome, preco, quantidade: 1 });
+  }
+  atualizarCarrinho();
+}
+
+function aumentarQuantidade(index) {
+  carrinho[index].quantidade++;
+  atualizarCarrinho();
+}
+
+function diminuirQuantidade(index) {
+  if (carrinho[index].quantidade > 1) {
+    carrinho[index].quantidade--;
+  } else {
+    carrinho.splice(index, 1);
+  }
+  atualizarCarrinho();
+}
+
+function atualizarCarrinho() {
+  const lista = document.getElementById('lista-carrinho');
+  const totalSpan = document.getElementById('total');
+  lista.innerHTML = '';
+  let total = 0;
+
+  carrinho.forEach((item, index) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      ${item.nome} x${item.quantidade} - R$ ${(item.preco * item.quantidade).toFixed(2)}
+      <button onclick="aumentarQuantidade(${index})">+</button>
+      <button onclick="diminuirQuantidade(${index})">−</button>
+    `;
+    lista.appendChild(li);
+    total += item.preco * item.quantidade;
+  });
+
+  totalSpan.textContent = total.toFixed(2);
+  document.getElementById('carrinho').style.display = carrinho.length > 0 ? 'block' : 'none';
+}
+
+async function finalizarCompra() {
+  if (carrinho.length === 0) {
+    alert("Seu carrinho está vazio.");
+    return;
+  }
+
+  // Pedir dados do cliente
+  const nomeCliente = prompt("Digite seu nome:");
+  const emailCliente = prompt("Digite seu email:");
+  const telefoneCliente = prompt("Digite seu telefone:");
+
+  if (!nomeCliente || !emailCliente || !telefoneCliente) {
+    alert("Por favor, preencha todos os dados!");
+    return;
+  }
+
+  // Calcular total
+  let total = 0;
+  carrinho.forEach(item => {
+    total += item.preco * item.quantidade;
+  });
+
+  // Criar resumo do pedido
+  let itensTexto = '';
+  carrinho.forEach(item => {
+    itensTexto += `• ${item.nome} x${item.quantidade} - R$ ${(item.preco * item.quantidade).toFixed(2)}\n`;
+  });
+
+  const resumo = `=== RESUMO DO PEDIDO ===\n\n${itensTexto}\nTOTAL: R$ ${total.toFixed(2)}\n\nEscolha como finalizar sua compra:`;
+  
+  const opcao = confirm(resumo + "\n\nClique OK para WhatsApp ou Cancelar para Mercado Pago direto");
+  
+  if (opcao) {
+    // WhatsApp com dados do cliente
+    const mensagemWhatsApp = encodeURIComponent(`🛒 NOVO PEDIDO\n\n👤 Cliente: ${nomeCliente}\n📧 Email: ${emailCliente}\n📱 Telefone: ${telefoneCliente}\n\n${itensTexto}\nTOTAL: R$ ${total.toFixed(2)}\n\nGostaria de finalizar minha compra.`);
+    window.open(`https://wa.me/5511999999999?text=${mensagemWhatsApp}`, '_blank');
+    
+    // Enviar notificação por email (opcional)
+    enviarNotificacaoEmail(nomeCliente, emailCliente, telefoneCliente, carrinho, total);
+  } else {
+    // Mercado Pago direto
+    const linkMercadoPago = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=TEST-${Date.now()}`;
+    window.open(linkMercadoPago, '_blank');
+    
+    // Enviar notificação por email mesmo assim
+    enviarNotificacaoEmail(nomeCliente, emailCliente, telefoneCliente, carrinho, total);
+  }
+  
+  carrinho = [];
+  atualizarCarrinho();
+}
+
+// Função para enviar notificação por email (usando EmailJS ou similar)
+function enviarNotificacaoEmail(nome, email, telefone, itens, total) {
+  // Você pode usar EmailJS, Formspree ou similar
+  const dadosPedido = {
+    nome: nome,
+    email: email,
+    telefone: telefone,
+    itens: itens,
+    total: total,
+    data: new Date().toLocaleString('pt-BR')
+  };
+  
+  console.log('Dados do pedido para notificação:', dadosPedido);
+  
+  // Aqui você pode integrar com EmailJS ou outro serviço
+  // Por enquanto, vamos apenas mostrar no console
+  alert('Pedido registrado! Você receberá uma confirmação em breve.');
+}
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('avast.png');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+
+    header {
+      background-color: rgba(34, 34, 34, 0.8);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .produtos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      margin: 1rem;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .produto {
+      background: rgb(90, 86, 86);
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.2s;
+      width: 100%;
+    }
+
+    .produto:hover {
+      transform: scale(1.03);
+    }
+
+    .produto img {
+      max-width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .produto h2 {
+      font-size: 18px;
+      margin: 10px 0 5px;
+    }
+
+    .produto p {
+      font-size: 16px;
+      margin: 5px 0;
+      color: rgb(249, 250, 249);
+    }
+
+    .botao {
+      background-color: #5017d4;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    footer {
+      background: rgba(34, 34, 34, 0.8);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+
+    #carrinho {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      border: 2px solid #222;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 300px;
+      display: none;
+      z-index: 999;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Lojinha do Black</h1>
+    <p>Preço baixo e rapidez na entrega</p>
+    <a href="/metodos-pagamento.html" class="botao" style="margin-top: 10px;">Ver Métodos de Pagamento</a>
+  </header>
+
+  <section class="produtos">
+
+    <!-- PRODUTO 1 -->
+    <div class="produto">
+      <img src="Montcbttigreverde.webp" alt="Produto 1">
+      <h2>Mont 5 star excep</h2>
+      <p>R$ 49,00 ou 140k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Montaria', 49.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!-- PRODUTO 2 -->
+    <div class="produto">
+      <img src="armas 80.png" alt="Produto 2">
+      <h2>Armas Lend/roxa lvl75/80</h2>
+      <p>R$5,60 ou 16k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Armas 80', 5.60)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!-- PRODUTO 3 -->
+    <div class="produto">
+      <img src="arma red 100.png" alt="Produto 3">
+      <h2>Armas red 90</h2>
+      <p>R$21,00 ou 60k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Armas red 100', 21.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!--PRODUTO 4 -->
+      <div class="produto">
+      <img src="armas roxas.png" alt="Produto 3">
+      <h2>Armas Roxas 90</h2>
+      <p>R$21,00 ou 60k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('roxas 90', 12.00)">Adicionar ao Carrinho</button>
+    </div>
+
+  </section>
+    <section class="produtos">
+
+    <!-- PRODUTO 1 -->
+    <div class="produto">
+      <img src="trono.JPG" alt="Produto 4">
+      <h2>Trono excep 5 star</h2>
+      <p>R$ 49,00 ou 140k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Trono excep 5 Star', 49.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!-- PRODUTO 2 -->
+    <div class="produto">
+      <img src="armas 90.png" alt="Produto 5">
+      <h2>Armas Lend/roxa lvl90</h2>
+      <p>R$ 28,00 ou 80k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Armas 90', 28.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!-- PRODUTO 3 -->
+    <div class="produto">
+      <img src="armas red 90.png" alt="Produto 6">
+      <h2>Armas Red lvl90</h2>
+      <p>R$ 35,00 ou 100k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Armas Red 90', 35.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!-- PRODUTO 4 -->
+    <div class="produto">
+      <img src="armas roxas 90.png" alt="Produto 7">
+      <h2>Armas Roxas lvl90</h2>
+      <p>R$ 42,00 ou 120k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Armas Roxas 90', 42.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!-- PRODUTO 5 -->
+    <div class="produto">
+      <img src="peças red.png" alt="Produto 8">
+      <h2>Peças Red</h2>
+      <p>R$ 14,00 ou 40k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Peças Red', 14.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!-- PRODUTO 6 -->
+    <div class="produto">
+      <img src="set roxo.png" alt="Produto 9">
+      <h2>Set Roxo Completo</h2>
+      <p>R$ 70,00 ou 200k</p>
+      <button class="botao" onclick="adicionarAoCarrinho('Set Roxo Completo', 70.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    <!-- PRODUTO 7 -->
+    <div class="produto">
+      <img src="gold.jpg" alt="Produto 10">
+      <h2>100k GOLD</h2>
+      <p>R$35</p>
+      <button class="botao" onclick="adicionarAoCarrinho('GOLD',35.00)">Adicionar ao Carrinho</button>
+    </div>
+
+    </section>
+    <div id="carrinho">
+  <h3>Carrinho</h3>
+  <ul id="lista-carrinho"></ul>
+  <p><strong>Total:</strong> R$ <span id="total">0.00</span></p>
+  <button class="botao" onclick="finalizarCompra()">Finalizar Compra</button>
+</div>
+  <footer>
+    <p>&copy; 2025 Minha Loja. Todos os direitos reservados.</p>
+  </footer>
+
+</body>
+</html> 
