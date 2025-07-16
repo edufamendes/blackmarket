@@ -1,430 +1,179 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Loja Fácil</title>
-  <script>
-  let carrinho = [];
-
-function adicionarAoCarrinho(nome, preco) {
-  const itemExistente = carrinho.find(item => item.nome === nome);
-  if (itemExistente) {
-    itemExistente.quantidade++;
-  } else {
-    carrinho.push({ nome, preco, quantidade: 1 });
-  }
-  atualizarCarrinho();
-}
-
-function aumentarQuantidade(index) {
-  carrinho[index].quantidade++;
-  atualizarCarrinho();
-}
-
-function diminuirQuantidade(index) {
-  if (carrinho[index].quantidade > 1) {
-    carrinho[index].quantidade--;
-  } else {
-    carrinho.splice(index, 1);
-  }
-  atualizarCarrinho();
-}
-
-function atualizarCarrinho() {
-  const lista = document.getElementById('lista-carrinho');
-  const totalSpan = document.getElementById('total');
-  lista.innerHTML = '';
-  let total = 0;
-
-  carrinho.forEach((item, index) => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      ${item.nome} x${item.quantidade} - R$ ${(item.preco * item.quantidade).toFixed(2)}
-      <button onclick="aumentarQuantidade(${index})">+</button>
-      <button onclick="diminuirQuantidade(${index})">−</button>
-    `;
-    lista.appendChild(li);
-    total += item.preco * item.quantidade;
-  });
-
-  totalSpan.textContent = total.toFixed(2);
-  document.getElementById('carrinho').style.display = carrinho.length > 0 ? 'block' : 'none';
-}
-
-async function finalizarCompra() {
-  if (carrinho.length === 0) {
-    alert("Seu carrinho está vazio.");
-    return;
-  }
-
-  // Pedir dados do cliente
-  const nomeCliente = prompt("Digite seu nome:");
-  const emailCliente = prompt("Digite seu email:");
-  const telefoneCliente = prompt("Digite seu telefone:");
-
-  if (!nomeCliente || !emailCliente || !telefoneCliente) {
-    alert("Por favor, preencha todos os dados!");
-    return;
-  }
-
-  // Calcular total
-  let total = 0;
-  carrinho.forEach(item => {
-    total += item.preco * item.quantidade;
-  });
-
-  // Criar resumo do pedido
-  let itensTexto = '';
-  carrinho.forEach(item => {
-    itensTexto += `• ${item.nome} x${item.quantidade} - R$ ${(item.preco * item.quantidade).toFixed(2)}\n`;
-  });
-
-  const resumo = `=== RESUMO DO PEDIDO ===\n\n${itensTexto}\nTOTAL: R$ ${total.toFixed(2)}\n\nEscolha como finalizar sua compra:`;
-  
-  const opcao = confirm(resumo + "\n\nClique OK para WhatsApp ou Cancelar para Mercado Pago direto");
-  
-  if (opcao) {
-    // WhatsApp com dados do cliente
-    const mensagemWhatsApp = encodeURIComponent(`🛒 NOVO PEDIDO\n\n👤 Cliente: ${nomeCliente}\n📧 Email: ${emailCliente}\n📱 Telefone: ${telefoneCliente}\n\n${itensTexto}\nTOTAL: R$ ${total.toFixed(2)}\n\nGostaria de finalizar minha compra.`);
-    window.open(`https://wa.me/5511999999999?text=${mensagemWhatsApp}`, '_blank');
-    
-    // Enviar notificação por email (opcional)
-    enviarNotificacaoEmail(nomeCliente, emailCliente, telefoneCliente, carrinho, total);
-  } else {
-    // Mercado Pago direto
-    const linkMercadoPago = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=TEST-${Date.now()}`;
-    window.open(linkMercadoPago, '_blank');
-    
-    // Enviar notificação por email mesmo assim
-    enviarNotificacaoEmail(nomeCliente, emailCliente, telefoneCliente, carrinho, total);
-  }
-  
-  carrinho = [];
-  atualizarCarrinho();
-}
-
-// Função para enviar notificação por email (usando EmailJS ou similar)
-function enviarNotificacaoEmail(nome, email, telefone, itens, total) {
-  // Você pode usar EmailJS, Formspree ou similar
-  const dadosPedido = {
-    nome: nome,
-    email: email,
-    telefone: telefone,
-    itens: itens,
-    total: total,
-    data: new Date().toLocaleString('pt-BR')
-  };
-  
-  console.log('Dados do pedido para notificação:', dadosPedido);
-  
-  // Aqui você pode integrar com EmailJS ou outro serviço
-  // Por enquanto, vamos apenas mostrar no console
-  alert('Pedido registrado! Você receberá uma confirmação em breve.');
-}
-  </script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-image: url('avast.png');
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
-      min-height: 100vh;
-      margin: 0;
-      padding: 0;
-      color: white;
-    }
-
-    header {
-      background-color: rgba(34, 34, 34, 0.8);
-      color: white;
-      padding: 1rem;
-      text-align: center;
-    }
-
-    .header-actions {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    #user-section {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    #user-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    #user-name {
-      color: #fff;
-      font-weight: bold;
-    }
-
-    h1 {
-      margin: 0;
-    }
-
-    .produtos {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      padding: 2rem;
-      background-color: rgba(0, 0, 0, 0.5);
-      border-radius: 10px;
-      margin: 1rem;
-      max-width: 1200px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .produto {
-      background: rgb(90, 86, 86);
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      padding: 1rem;
-      text-align: center;
-      transition: transform 0.2s;
-      width: 100%;
-    }
-
-    .produto:hover {
-      transform: scale(1.03);
-    }
-
-    .produto img {
-      max-width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-
-    .produto h2 {
-      font-size: 18px;
-      margin: 10px 0 5px;
-    }
-
-    .produto p {
-      font-size: 16px;
-      margin: 5px 0;
-      color: rgb(249, 250, 249);
-    }
-
-    .botao {
-      background-color: #5017d4;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    footer {
-      background: rgba(34, 34, 34, 0.8);
-      color: white;
-      text-align: center;
-      padding: 1rem;
-      margin-top: 2rem;
-    }
-
-    #carrinho {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: white;
-      border: 2px solid #222;
-      padding: 15px;
-      border-radius: 10px;
-      max-width: 300px;
-      display: none;
-      z-index: 999;
-      color: black;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewDay Brasil - Loja de Itens</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <h1 class="logo-dinamico nome-animado">
+                    <span class="letra-animada">N</span>
+                    <span class="letra-animada">e</span>
+                    <span class="letra-animada">w</span>
+                    <span class="letra-animada">D</span>
+                    <span class="letra-animada">a</span>
+                    <span class="letra-animada">y</span>
+                    <span class="letra-animada"> </span>
+                    <span class="letra-animada">B</span>
+                    <span class="letra-animada">r</span>
+                    <span class="letra-animada">a</span>
+                    <span class="letra-animada">s</span>
+                    <span class="letra-animada">i</span>
+                    <span class="letra-animada">l</span>
+                </h1>
+                <a href="https://discord.gg/JY54bPQ7Xr" target="_blank" class="discord-btn" style="display: inline-flex; align-items: center; gap: 0.5em; background: #5865F2; color: #fff; padding: 8px 18px; border-radius: 8px; font-weight: bold; text-decoration: none; font-size: 1rem; box-shadow: 0 2px 8px rgba(88,101,242,0.13); transition: background 0.2s, box-shadow 0.2s; margin-left: 18px;">
+                    <i class="fab fa-discord" style="font-size: 1.2em;"></i> Discord
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="#home" class="nav-link categoria-nav">Início</a>
+                <div class="categorias-nav">
+                    <a href="#loja" class="nav-link categoria-nav" data-categoria="bases-vip">Bases VIP</a>
+                    <a href="#loja" class="nav-link categoria-nav" data-categoria="roupas-vip">Roupas VIP</a>
+                    <a href="#loja" class="nav-link categoria-nav" data-categoria="veiculos">Veículos</a>
+                    <a href="#loja" class="nav-link categoria-nav" data-categoria="construcao">Construção</a>
+                </div>
+            </div>
+        </nav>
+    </header>
 
-  <header>
-    <h1>Lojinha do Black</h1>
-    <p>Preço baixo e rapidez na entrega</p>
-    <div class="header-actions">
-      <a href="/metodos-pagamento.html" class="botao" style="margin-right: 10px;">Ver Métodos de Pagamento</a>
-      <div id="user-section">
-        <a href="/login" class="botao" id="login-btn">Entrar</a>
-        <a href="/cadastro" class="botao" id="cadastro-btn">Cadastrar</a>
-        <div id="user-info" style="display: none;">
-          <span id="user-name"></span>
-          <a href="/perfil" class="botao">Meu Perfil</a>
-          <button class="botao" onclick="fazerLogout()">Sair</button>
+    <!-- Loja Section -->
+    <section id="loja" class="loja">
+        <div class="container">
+            <h2 style="
+  font-family: 'Lucida Sans', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans Regular', Arial, sans-serif;
+  font-size: 2.4rem;
+  text-align: center;
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+  background: none;
+  color: transparent;
+  text-shadow: 0 2px 12px #000, 0 1px 0 #FFD700;
+  border-radius: 12px;
+  padding: 0.6em 0;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  background-image: linear-gradient(90deg, #00C853, #FFD600);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: brilhoTitulo 2.5s linear infinite alternate;
+">
+  Loja NewDay Brasil
+</h2>
+            
+            <!-- Layout da Loja com Carrinho -->
+            <div class="loja-layout">
+                <!-- Grid de Produtos -->
+                <div class="produtos-container">
+                    <div class="produtos-grid" id="produtos-grid">
+                        <!-- Produtos serão carregados dinamicamente -->
+                    </div>
+                </div>
+                <!-- Carrinho de Compras -->
+                <div class="carrinho-fixo">
+                    <div class="carrinho-header">
+                        <h3><i class="fas fa-shopping-cart"></i> Carrinho</h3>
+                        <span class="cart-count">0</span>
+                    </div>
+                    <div class="carrinho-items" id="carrinho-items">
+                        <!-- Items do carrinho serão carregados dinamicamente -->
+                    </div>
+                    <div class="carrinho-footer">
+                        <div class="total">
+                            <span>Total:</span>
+                            <span id="carrinho-total">R$ 0,00</span>
+                        </div>
+                        <button class="btn-finalizar" id="btn-finalizar-compra">
+                            <i class="fas fa-credit-card"></i> Finalizar Compra
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
+    </section>
+
+    <!-- Modal do Produto -->
+    <div id="produto-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="produto-detalhes">
+                <div class="produto-imagens">
+                    <div class="imagem-principal">
+                        <img id="imagem-principal" src="" alt="">
+                    </div>
+                    <div class="galeria-miniaturas" id="galeria-miniaturas">
+                        <!-- Miniaturas serão carregadas dinamicamente -->
+                    </div>
+                </div>
+                <div class="produto-info">
+                    <h2 id="produto-titulo"></h2>
+                    <p class="categoria" id="produto-categoria"></p>
+                    <p class="descricao" id="produto-descricao"></p>
+                    <div class="preco" id="produto-preco"></div>
+                    <div class="acoes">
+                        <button class="btn-adicionar" id="btn-adicionar-modal">
+                            <i class="fas fa-cart-plus"></i> Adicionar ao Carrinho
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Imagem Ampliada -->
+    <div id="imagem-modal" class="imagem-modal" style="display:none;">
+        <span class="imagem-modal-close">&times;</span>
+        <button class="imagem-modal-prev">&#10094;</button>
+        <img class="imagem-modal-conteudo" id="imagem-modal-conteudo" src="" alt="Imagem Ampliada">
+        <button class="imagem-modal-next">&#10095;</button>
+    </div>
+
+    <!-- Adicionar modal de aviso no final do body -->
+    <div id="modal-aviso" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.82); z-index:9999; align-items:center; justify-content:center;">
+      <div style="background: linear-gradient(135deg, #232526 0%, #414345 100%); color:#FFD700; border-radius:22px; padding:2.5rem 2rem 2rem 2rem; max-width:95vw; box-shadow:0 8px 32px #000; border: 2px solid #FFD700; position:relative; text-align:center;">
+        <div style="font-size:3.2rem; margin-bottom:0.7rem; animation:pulseAviso 1.2s infinite alternate;">
+          <i class="fas fa-exclamation-triangle" style="color:#FFD700;"></i>
+        </div>
+        <h2 style="color:#FFD700; text-align:center; font-size:2.1rem; margin-bottom:0.5rem; letter-spacing:0.04em; text-shadow:0 2px 12px #000, 0 1px 0 #FFD700;">Atenção!</h2>
+        <p style="color:#fff; font-size:1.18rem; text-align:center; margin-bottom:1.2rem; line-height:1.6;">
+          <span style="background: linear-gradient(90deg, #FFD700, #4CAF50); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight:bold;">Após finalizar sua compra</span>, abra um <b style="color:#4CAF50;">ticket</b> no Discord e envie:<br><br>
+          <span style="display:inline-block; margin:0.3em 0; background:rgba(255,255,255,0.07); border-radius:8px; padding:0.3em 1em; font-weight:bold; color:#FFD700;">Produto adquirido</span><br>
+          <span style="display:inline-block; margin:0.3em 0; background:rgba(255,255,255,0.07); border-radius:8px; padding:0.3em 1em; font-weight:bold; color:#FFD700;">Comprovante de pagamento</span><br>
+          <span style="display:inline-block; margin:0.3em 0; background:rgba(255,255,255,0.07); border-radius:8px; padding:0.3em 1em; font-weight:bold; color:#FFD700;">Seu nick no jogo</span><br><br>
+          <span style="color:#FFD700; font-weight:bold;">Assim garantimos a entrega rápida dos seus itens!</span>
+        </p>
+        <a href="https://discord.gg/JY54bPQ7Xr" target="_blank" style="display:inline-block; background:linear-gradient(90deg,#4CAF50,#FFD700); color:#232526; font-weight:bold; font-size:1.15em; border:none; border-radius:10px; padding:0.7em 2.2em; margin-bottom:1.1em; margin-top:0.2em; text-decoration:none; box-shadow:0 2px 12px #FFD700; transition:background 0.2s, color 0.2s;">Abrir Discord</a><br>
+        <button onclick="document.getElementById('modal-aviso').style.display='none'" style="margin:0 auto; display:block; background:#FFD700; color:#232526; border:none; border-radius:8px; padding:0.7em 2.2em; font-weight:bold; font-size:1.1em; cursor:pointer; box-shadow:0 2px 8px #FFD700; transition:background 0.2s, color 0.2s;">OK, Entendi</button>
+        <style>@keyframes pulseAviso{0%{transform:scale(1);}100%{transform:scale(1.13);}}</style>
       </div>
     </div>
-  </header>
 
-  <section class="produtos">
 
-    <!-- PRODUTO 1 -->
-    <div class="produto">
-      <img src="Montcbttigreverde.webp" alt="Produto 1">
-      <h2>Mont 5 star excep</h2>
-      <p>R$ 49,00 ou 140k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Montaria', 49.00)">Adicionar ao Carrinho</button>
-    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <p style="margin: 0;">&copy; 2024 NewDay Brasil. Todos os direitos reservados.</p>
+            <a href="https://discord.gg/JY54bPQ7Xr" target="_blank" class="discord-btn" style="display: flex; align-items: center; gap: 0.5em; background: #5865F2; color: #fff; padding: 10px 22px; border-radius: 8px; font-weight: bold; text-decoration: none; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(88,101,242,0.13); transition: background 0.2s, box-shadow 0.2s;">
+                <i class="fab fa-discord" style="font-size: 1.4em;"></i> Entrar no Discord
+            </a>
+        </div>
+    </footer>
 
-    <!-- PRODUTO 2 -->
-    <div class="produto">
-      <img src="armas 80.png" alt="Produto 2">
-      <h2>Armas Lend/roxa lvl75/80</h2>
-      <p>R$5,60 ou 16k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Armas 80', 5.60)">Adicionar ao Carrinho</button>
-    </div>
-
-    <!-- PRODUTO 3 -->
-    <div class="produto">
-      <img src="arma red 100.png" alt="Produto 3">
-      <h2>Armas red 90</h2>
-      <p>R$21,00 ou 60k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Armas red 100', 21.00)">Adicionar ao Carrinho</button>
-    </div>
-
-    <!--PRODUTO 4 -->
-      <div class="produto">
-      <img src="armas roxas.png" alt="Produto 3">
-      <h2>Armas Roxas 90</h2>
-      <p>R$21,00 ou 60k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('roxas 90', 12.00)">Adicionar ao Carrinho</button>
-    </div>
-
-  </section>
-    <section class="produtos">
-
-    <!-- PRODUTO 1 -->
-    <div class="produto">
-      <img src="trono.JPG" alt="Produto 4">
-      <h2>Trono excep 5 star</h2>
-      <p>R$ 49,00 ou 140k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Trono excep 5 Star', 49.00)">Adicionar ao Carrinho</button>
-    </div>
-
-    <!-- PRODUTO 2 -->
-    <div class="produto">
-      <img src="armas 90.png" alt="Produto 5">
-      <h2>Armas Lend/roxa lvl90</h2>
-      <p>R$ 28,00 ou 80k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Armas 90', 28.00)">Adicionar ao Carrinho</button>
-    </div>
-
-    <!-- PRODUTO 3 -->
-    <div class="produto">
-      <img src="armas red 90.png" alt="Produto 6">
-      <h2>Armas Red lvl90</h2>
-      <p>R$ 35,00 ou 100k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Armas Red 90', 35.00)">Adicionar ao Carrinho</button>
-    </div>
-
-    <!-- PRODUTO 4 -->
-    <div class="produto">
-      <img src="armas roxas 90.png" alt="Produto 7">
-      <h2>Armas Roxas lvl90</h2>
-      <p>R$ 42,00 ou 120k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Armas Roxas 90', 42.00)">Adicionar ao Carrinho</button>
-    </div>
-
-    <!-- PRODUTO 5 -->
-    <div class="produto">
-      <img src="peças red.png" alt="Produto 8">
-      <h2>Peças Red</h2>
-      <p>R$ 14,00 ou 40k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Peças Red', 14.00)">Adicionar ao Carrinho</button>
-    </div>
-
-    <!-- PRODUTO 6 -->
-    <div class="produto">
-      <img src="set roxo.png" alt="Produto 9">
-      <h2>Set Roxo Completo</h2>
-      <p>R$ 70,00 ou 200k</p>
-      <button class="botao" onclick="adicionarAoCarrinho('Set Roxo Completo', 70.00)">Adicionar ao Carrinho</button>
-    </div>
-
-    <!-- PRODUTO 7 -->
-    <div class="produto">
-      <img src="gold.jpg" alt="Produto 10">
-      <h2>100k GOLD</h2>
-      <p>R$35</p>
-      <button class="botao" onclick="adicionarAoCarrinho('GOLD',35.00)">Adicionar ao Carrinho</button>
-    </div>
-
-    </section>
-    <div id="carrinho">
-  <h3>Carrinho</h3>
-  <ul id="lista-carrinho"></ul>
-  <p><strong>Total:</strong> R$ <span id="total">0.00</span></p>
-  <button class="botao" onclick="finalizarCompra()">Finalizar Compra</button>
-</div>
-  <footer>
-    <p>&copy; 2025 Minha Loja. Todos os direitos reservados.</p>
-  </footer>
-
-  <script>
-    // Funções para gerenciar login/logout
-    async function verificarLogin() {
-      try {
-        const response = await fetch('/api/usuario');
-        const data = await response.json();
-        
-        const loginBtn = document.getElementById('login-btn');
-        const cadastroBtn = document.getElementById('cadastro-btn');
-        const userInfo = document.getElementById('user-info');
-        const userName = document.getElementById('user-name');
-        
-        if (data.logado) {
-          loginBtn.style.display = 'none';
-          cadastroBtn.style.display = 'none';
-          userInfo.style.display = 'flex';
-          userName.textContent = `Olá, ${data.usuario.nome}!`;
-        } else {
-          loginBtn.style.display = 'inline-block';
-          cadastroBtn.style.display = 'inline-block';
-          userInfo.style.display = 'none';
-        }
-      } catch (error) {
-        console.error('Erro ao verificar login:', error);
-      }
-    }
-
-    async function fazerLogout() {
-      try {
-        const response = await fetch('/api/logout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          window.location.reload();
-        } else {
-          alert('Erro ao fazer logout');
-        }
-      } catch (error) {
-        console.error('Erro ao fazer logout:', error);
-        alert('Erro ao fazer logout');
-      }
-    }
-
-    // Verificar login quando a página carregar
-    document.addEventListener('DOMContentLoaded', verificarLogin);
-  </script>
-
+    <script src="script.js"></script>
+    <style>
+@keyframes brilhoTitulo {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+</style>
 </body>
 </html>
